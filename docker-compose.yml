@@ -1,0 +1,58 @@
+version: "3"
+services:
+  app:
+    container_name: nginx-proxy-manager
+    image: "jc21/nginx-proxy-manager:latest"
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+      - 81:81
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      DISABLE_IPV6: "true"
+    volumes:
+      - ./data/nginx-proxy-manager:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+  mysql:
+    container_name: dev-mysql
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+
+  adminer:
+    container_name: dev-adminer
+    image: adminer:latest
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+      # ADMINER_DESIGN: galkaev
+      ADMINER_DESIGN: dracula
+    ports:
+      - ${ADMINER_PORT:-8080}:8080
+    depends_on:
+      - mysql
+
+  memcached:
+    container_name: dev-memcached
+    image: memcached
+    ports:
+      - "${MEMCACHED_PORT:-11211}:11211"
+
+  redis:
+    container_name: dev-redis
+    image: redis:latest
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - ${REDIS_PORT:-6379}:6379
