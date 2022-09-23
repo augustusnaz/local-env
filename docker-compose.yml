@@ -60,6 +60,17 @@ services:
     ports:
       - ${REDIS_PORT:-6379}:6379
 
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=dev-redis:${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - ${REDIS_COMMANDER_PORT:-8081}:8081
+
   soketi:
     container_name: dev-soketi
     image: quay.io/soketi/soketi:latest-16-alpine
